@@ -68,7 +68,7 @@ jobs:
           cmd: install
       - name: Create bundle
         run: >
-          mkdir -p build && tar -czf build/back-home-build-${{ steps.release.outputs.version }}.tar.gz --exclude build .
+          mkdir -p build && tar -czf build/back-home-build-${{ steps.release.outputs.version }}.tar.gz --exclude build --exclude .git --exclude .github --exclude .env --exclude .gitignore .
       - name: Attach bundle into release
         uses: AButler/upload-release-assets@v2.0
         with:
