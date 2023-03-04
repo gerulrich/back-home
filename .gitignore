@@ -25,6 +25,7 @@ dist-ssr
 
 # Environment files
 .env.production
+.env
 
 # Macos DS files
 **/.DS_Store
