@@ -27,9 +27,22 @@ const login = async(req, res) => {
         });
     }
     try {
-        const token = await createJWT(user.id);
+        const token = await createJWT(user.id, user.roles);
 
         return res.json({ user, token });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            error: 'Unexpected error has ocurred'
+        });
+    }
+}
+
+const renewToken = async(req, res) => {
+    const { uid, roles = [] } = req.user;
+    try {
+        const token = await createJWT(uid, roles);
+        return res.json({ token });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
@@ -81,5 +94,6 @@ const googleSignIn = async(req, res) => {
 
 module.exports = {
     login,
+    renewToken,
     googleSignIn
 }

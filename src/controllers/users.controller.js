@@ -5,12 +5,18 @@ const getUsers = async(req, res) => {
     const {limit = 5, offset = 0} = req.query;
     const query = {enabled: true};
   
-    const [total, usuarios] = await Promise.all([
+    const [total, users] = await Promise.all([
         User.countDocuments(query), 
         User.find(query).limit(limit).skip(offset)
     ])
 
-    res.json({ total, usuarios });
+    res.json({ total, users });
+}
+
+const getUserById = async(req, res) => {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    res.json({ user });
 }
 
 const createUser = async (req, res) => {
@@ -33,20 +39,23 @@ const updateUser = async(req, res) => {
         others.password = bcryptjs.hashSync(password, salt);
     }
 
-    const user = await User.findByIdAndUpdate(id, others);
+    const user = await User.findByIdAndUpdate(id, others, {new: true});
 
     res.json({ user });
 }
 
 const deleteUser = async(req, res) => {
     const { id } = req.params;
-    const user = await User.findByIdAndUpdate(id, { enabled:true });
-    const currentUser = req.user;
-    res.json({ user, currentUser });
+    const user = await User.findByIdAndUpdate(id, { enabled:false });
+    if (!user) {
+        return res.code(404).json({msg: "User not found"});
+    }
+    res.json( user );
 }
 
 module.exports = {
     getUsers,
+    getUserById,
     createUser,
     updateUser,
     deleteUser
