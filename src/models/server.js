@@ -35,6 +35,7 @@ class Server {
 
     routes() {
         this.app.use( "/api/auth", require("../routes/auth"))
+        this.app.use( "/api/tv", require("../routes/channels"))
         this.app.use( "/api/music", require("../routes/music"))
         this.app.use( "/api/users", require("../routes/users"))
     }

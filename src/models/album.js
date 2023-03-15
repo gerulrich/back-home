@@ -9,11 +9,12 @@ const AlbumSchema = Schema({
         type: String,
         required: [true, '\'artist\' is a required field.']
     },
+    upc: String,
     source: {
         type: String,
         required: [true, '\'source\' is a required field.']
     },
-    deezer_id: Number,
+    source_id: Number,
     cover_url: String,
     format: {
         type: String,
@@ -27,7 +28,11 @@ const AlbumSchema = Schema({
         },
         artist: String,
         track_number: Number,
-        cd_number: Number,
+        disc_number: Number,
+        comments: String,
+        isrc: String,
+        upc: String,
+        duration: Number,
         media_url: {
             type: String,
             required: [true, '\'media_url\' is a required field.']
@@ -35,4 +40,16 @@ const AlbumSchema = Schema({
     }]
 });
 
-module.exports = model('Album', AlbumSchema)
+AlbumSchema.methods.toJSON = function() {
+    const {__v, _id, ...album} = this.toObject();
+    album.uid = _id;
+    const tracks = album.tracks.map(track => {
+        const {_id, ...others} = track;
+        others.uid = _id;
+        return others;
+    });
+    album.tracks = tracks;
+    return album;
+}
+
+module.exports = model('Album', AlbumSchema);
