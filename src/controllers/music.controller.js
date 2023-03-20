@@ -1,4 +1,5 @@
-const Album  = require("../models/album")
+const Album  = require("../models/album");
+const sockets = require("../websocket/user-sockets");
 
 const getAlbums = async(req, res) => {
     const {limit = 25, offset = 0} = req.query;
@@ -98,6 +99,17 @@ const updateTrackById = async(req, res) => {
     res.json(track_response(track));
 }
 
+const downloadProgress = async(req, res) => {
+    const {uid, album, message, level, date} = req.body;
+    const socket =  sockets.sockets[uid];
+    if (socket) {
+        socket.emit('download-progress', { album, message, level, date });
+        user = sockets.users[uid];
+        return res.json({ user, message });
+    }
+    res.status(404).json({message: `socket for user ${uid} not found`});
+}
+
 module.exports = {
     getAlbums,
     getAlbumById,
@@ -106,5 +118,6 @@ module.exports = {
     deleteAlbum,
     getTracksByAlbumId,
     getTrackById,
-    updateTrackById
+    updateTrackById,
+    downloadProgress
 }
