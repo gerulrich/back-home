@@ -9,7 +9,8 @@ const {
     updateAlbum,
     getTracksByAlbumId,
     getTrackById,
-    updateTrackById 
+    updateTrackById, 
+    downloadProgress
 } = require('../controllers/music.controller');
 
 const router = Router();
@@ -79,6 +80,9 @@ router.put('/albums/:id/tracks/:trackId', [
     check('track_number', '\'track_number\' is a required field.').not().isEmpty(),
     requestValidator
 ], updateTrackById);
+
+
+router.post('/download/progress', downloadProgress);
 
 
 module.exports = router;

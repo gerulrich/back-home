@@ -1,12 +1,11 @@
 const bcryptjs = require('bcryptjs');
 const { createJWT } = require('../helpers/jwt-create');
+const logger = require('../helpers/logger');
 const User = require("../models/user")
 //const { googleVerify } = require('../helpers/google-verify');
 
 const login = async(req, res) => {
-    
-    const {email, password} = req.body; 
-
+    const {email, password} = req.body;
     const user = await User.findOne({email});
     if (!user) {
         return res.status(401).json({
@@ -31,7 +30,7 @@ const login = async(req, res) => {
 
         return res.json({ user, token });
     } catch (error) {
-        console.log(error);
+        logger.error(error);
         return res.status(500).json({
             error: 'Unexpected error has ocurred'
         });
@@ -44,7 +43,7 @@ const renewToken = async(req, res) => {
         const token = await createJWT(uid, roles);
         return res.json({ token });
     } catch (error) {
-        console.log(error);
+        logger.error(error);
         return res.status(500).json({
             error: 'Unexpected error has ocurred'
         });
