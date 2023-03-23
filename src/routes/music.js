@@ -3,7 +3,8 @@ const { check } = require('express-validator');
 const  {requestValidator, validateJWT, rolesAllowed}  = require('../middlewares');
 const { 
     getAlbums, 
-    getAlbumById, 
+    getAlbumById,
+    getAlbumBySourceId,
     createAlbum,
     deleteAlbum,
     updateAlbum,
@@ -28,8 +29,15 @@ router.get('/albums/:id', [
     requestValidator
 ], getAlbumById);
 
-router.post('/albums', [
+router.get('/albums/:source/:id', [
     validateJWT,
+    rolesAllowed('USER_ROLE', 'ADMIN_ROLE'),
+    check('id', 'An invalid album id was supplied').not().isEmpty(),
+    requestValidator
+], getAlbumBySourceId);
+
+router.post('/albums', [
+    // validateJWT,
     // rolesAllowed('ADMIN_ROLE'),
     check('title', '\'title\' is a required field.').not().isEmpty(),
     check('artist', '\'artist\' is a required field.').not().isEmpty(),
