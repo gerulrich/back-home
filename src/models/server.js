@@ -12,7 +12,9 @@ class Server {
         this.app = express();
         this.port = process.env.NODE_PORT || 3000;
         this.server = require('http').createServer( this.app );
-        this.io = new SocketServer(this.server);
+        this.io = new SocketServer(this.server, {
+            cors: '*'
+        });
 
         // Conectar a la db
         this.conectarDB();
