@@ -12,7 +12,7 @@ const getAlbums = async(req, res) => {
 
     const [ total, albums ] = await Promise.all([
         Album.countDocuments(query), 
-        Album.find(query).limit(limit).skip(offset)
+        Album.find(query).sort({artist: 1, year: 1, title: 1}).limit(limit).skip(offset)
     ])
     res.json({ albums, total });
 }
@@ -21,17 +21,20 @@ const getAlbumById = async(req, res) => {
     const { id } = req.params;
     const album = await Album.findById(id);
     if (!album) {
-        res.status(404).json({msg: `Album ${id} not found`});
+        return res.status(404).json({msg: `Album ${id} not found`});
     }
     res.json(album);
 }
 
 const getAlbumBySourceId = async(req, res) => {
-    const { source, id } = req.params;
-    const query = { source, source_id: id } ;
+    const { source, id,  } = req.params;
+    const { upc} = req.query;
+    const query = upc
+     ? ({ $or:[{upc}, {source, source_id: parseInt(id)}]})
+     : ({source, source_id: parseInt(id)});
     const album = await Album.findOne(query);
     if (!album) {
-        res.status(404).json({msg: `Album ${id} not found`});
+        return res.status(404).json({msg: `Album ${id} not found`});
     }
     res.json(album);
 }
@@ -54,7 +57,7 @@ const deleteAlbum = async(req, res) => {
     const { id } = req.params;
     const {deletedCount} = await Album.deleteOne({_id: id});
     if (deletedCount === 0) {
-        res.status(404).json({msg: `Album ${id} not found`});
+        return res.status(404).json({msg: `Album ${id} not found`});
     }
     res.status(204).end();
 }
@@ -63,7 +66,7 @@ const getTracksByAlbumId = async(req, res) => {
     const { id } = req.params;
     const album = await Album.findById(id);
     if (!album) {
-        res.status(404).json({msg: `Album ${id} not found`});
+        return res.status(404).json({msg: `Album ${id} not found`});
     }
     res.json(album.tracks);
 }
@@ -101,10 +104,10 @@ const updateTrackById = async(req, res) => {
 }
 
 const downloadProgress = async(req, res) => {
-    const {uid, album, message, level, date} = req.body;
-    const socket =  sockets.sockets[uid];
+    const { uid, album, message, level, date, progress } = req.body;
+    const socket = sockets.sockets[uid];
     if (socket) {
-        socket.emit('download-progress', { album, message, level, date });
+        socket.emit('download-progress', { album, message, level, date, progress });
         user = sockets.users[uid];
         return res.json({ user, message });
     }
