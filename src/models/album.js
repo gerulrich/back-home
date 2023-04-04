@@ -62,7 +62,11 @@ const AlbumSchema = Schema(
         format: {
             type: String,
             required: [true, '\'format\' is a required field.'],
-            enum: ['MP3_128', 'MP3_320', 'FLAC']
+            enum: ['MP3_128', 'MP3_256', 'MP3_320', 'FLAC']
+        },
+        year: {
+            type: String,
+            required: [true, '\'year\' is a required field.']
         },
         tracks: [TrackSchema]
     },
