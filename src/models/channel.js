@@ -15,7 +15,11 @@ const ChannelSchema = Schema({
             key_id: String,
             key: String
         }
-    }
+    },
+    enabled: {
+        type: Boolean,
+        default: true
+    },
 });
 
 module.exports = model('Channel', ChannelSchema)
