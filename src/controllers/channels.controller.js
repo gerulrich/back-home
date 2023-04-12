@@ -2,9 +2,11 @@ const Channel = require("../models/channel");
 
 const getChannels = async(req, res) => {
     const {limit = 25, offset = 0} = req.query;
+    const x_disabled = req.header('X-DISABLED');
+    const query = (x_disabled === 'true') ? {} : {enabled: true};
     const [total, channels] = await Promise.all([
-        Channel.countDocuments(), 
-        Channel.find().limit(limit).skip(offset)
+        Channel.countDocuments(query), 
+        Channel.find(query).limit(limit).skip(offset)
     ]);
     res.json({ channels, total });
 }
