@@ -52,6 +52,11 @@ const AlbumSchema = Schema(
             type: String,
             required: [true, '\'artist\' is a required field.']
         },
+        comments: String,
+        origin_type: {
+            type: String,
+            enum: ['CD_RIP', 'WEB_DOWNLOAD', 'TORRENT_DOWNLOAD']
+        },
         upc: String,
         source: {
             type: String,
