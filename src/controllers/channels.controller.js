@@ -13,7 +13,8 @@ const getChannels = async(req, res) => {
 
 
 const getChannelById = async(req, res) => {
-    const channel = await Channel.findById(req.id);
+    const { id } = req.params;
+    const channel = await Channel.findById(id);
     if (!channel) {
         return res.status(404).json({msg: "channel not found"});
     }
