@@ -1,5 +1,7 @@
 const Album  = require("../models/album");
 const sockets = require("../websocket/user-sockets");
+const { spawn } = require('child_process');
+
 
 const getAlbums = async(req, res) => {
     const { limit = 25, offset = 0, q } = req.query;
@@ -84,6 +86,32 @@ const getTrackById = async(req, res) => {
     res.json(track);
 }
 
+const getSpectrumpicTrackById = async(req, res) => {
+    const { id, trackId } = req.params;
+    const album = await Album.findById(id);
+    if (!album) {
+        return res.status(404).json({msg: `Album ${id} not found`});
+    }
+    const [track] = album.tracks.filter(t => t._id.toString() == trackId);
+    if (!track) {
+        return res.status(404).json({msg: `Track ${trackId} not found`});
+    }
+    const inputFilePath = process.env.STATIC_PARENT_FOLDER + track.media_url;
+
+    const ffmpegCommand = [
+        '-i', inputFilePath,
+        '-lavfi', 'showspectrumpic=s=1024x512:mode=combined:color=rainbow:fscale=lin',
+        '-f', 'image2pipe',
+        '-vcodec', 'png',
+        '-'
+    ];  
+      
+    // Iniciar el proceso de ffmpeg
+    const ffmpegProcess = spawn('ffmpeg', ffmpegCommand);
+    ffmpegProcess.stdout.pipe(res);
+
+}
+
 const updateTrackById = async(req, res) => {
     const { id, trackId } = req.params;
     const {_id:not_use, ...update} = req.body;
@@ -123,6 +151,7 @@ module.exports = {
     deleteAlbum,
     getTracksByAlbumId,
     getTrackById,
+    getSpectrumpicTrackById,
     updateTrackById,
     downloadProgress
 }
