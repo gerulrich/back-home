@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
 const  {requestValidator, validateJWT, rolesAllowed}  = require('../middlewares');
-const { sendCodeToClients, createMusicTag, getMusicTags, updateMusicTag, deleteMusicTag } = require('../controllers/tags.controller');
+const { sendCodeToClients, createMusicTag, getMusicTags, getMusicTagById, updateMusicTag, deleteMusicTag } = require('../controllers/tags.controller');
 
 const router = Router();
 
@@ -10,6 +10,9 @@ router.get('/', [
     //rolesAllowed('USER_ROLE', 'ADMIN_ROLE'),
     //requestValidator
 ], getMusicTags);
+
+router.get('/:id', [
+], getMusicTagById);
 
 router.post('/', [
     validateJWT,

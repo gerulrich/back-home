@@ -44,6 +44,7 @@ class Server {
         this.app.use( "/api/auth", require("../routes/auth"))
         this.app.use( "/api/tv", require("../routes/channels"))
         this.app.use( "/api/music", require("../routes/music"))
+        this.app.use( "/api/tidal", require("../routes/tidal"))
         this.app.use( "/api/tags", require("../routes/tags"))
         this.app.use( "/api/users", require("../routes/users"))
     }
