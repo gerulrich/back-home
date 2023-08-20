@@ -16,6 +16,11 @@ class UserSockets {
         delete this.users[user.id];
         delete this.sockets[user.id];
     }
+
+    emit(user, topic, message) {
+        if (this.sockets[user.uid])
+            this.sockets[user.uid].emit(topic, message);
+    }
 }
 
 const sockets = new UserSockets();

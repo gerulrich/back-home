@@ -11,6 +11,14 @@ const getMusicTags = async(req, res) => {
     res.json({ tags, total });
 }
 
+const getMusicTagById = async(req, res) => {
+    const { id } = req.params;
+    const tag = await MusicTag.findById(id).populate('album', 'artist title cover_url');
+    if (!tag) {
+        return res.status(404).json({msg: `MusicTag ${id} not found`});
+    }
+    res.json(tag);
+}
 
 const createMusicTag = (req, res) => {
     const {_id, enabled, ...data} = req.body;
@@ -46,6 +54,7 @@ const sendCodeToClients = (req, res) => {
 
 module.exports = {
     getMusicTags,
+    getMusicTagById,
     createMusicTag,
     updateMusicTag,
     deleteMusicTag,
