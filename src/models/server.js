@@ -5,6 +5,8 @@ const morganMiddleware = require('../middlewares/morganMiddleware');
 const { websocket } = require('../websocket/websocket');
 const sockets = require('../websocket/user-sockets');
 const { Server:SocketServer } = require("socket.io");
+const cron = require('node-cron');
+const { epg_job } = require('../jobs/flow-epg');
 
 class Server {
 
@@ -27,6 +29,8 @@ class Server {
         this.routes();
 
         this.sockets();
+
+        this.jobs();
     }
 
     async conectarDB () {
@@ -47,11 +51,16 @@ class Server {
         this.app.use( "/api/tidal", require("../routes/tidal"))
         this.app.use( "/api/tags", require("../routes/tags"))
         this.app.use( "/api/users", require("../routes/users"))
+        this.app.use( "/api/recordings", require("../routes/recordings"))
     }
 
     sockets() {
         sockets.io = this.io;
         this.io.on('connection', (client) => websocket(sockets, client));
+    }
+
+    jobs() {
+        cron.schedule(process.env.FLOW_EPG_CRON, () => epg_job());
     }
 
     listen() {

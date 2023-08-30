@@ -16,7 +16,13 @@ const getAlbums = async(req, res) => {
         Album.countDocuments(query), 
         Album.find(query).sort({artist: 1, year: 1, title: 1}).limit(limit).skip(offset)
     ])
-    res.json({ albums, total });
+    res.json({
+        albums,
+        paging: {
+            page: Math.ceil(offset / limit) + 1,
+            total: Math.ceil(total / limit),
+        }
+    });
 }
 
 const getAlbumById = async(req, res) => {

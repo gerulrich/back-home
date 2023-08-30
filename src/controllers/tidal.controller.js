@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const sockets = require("../websocket/user-sockets");
 const tidal = require('../helpers/tidal-api');
+const path = require('path');
 
 const findAlbumsByText = async(req, res) => {
   const { limit = 25, offset = 0, q } = req.query;
@@ -48,8 +49,8 @@ const getAlbumById = async(req, res) => {
 
 const launchDownloadAlbum = async(req, res) => {
   const token = await tidal.getToken();
-  const proceso = spawn('node', ['/Users/germanulrich/git_personal/back-home/src/jobs/tidal-download.js', req.params.id, req.body.quality, token ])
-  .on('error', function( err ){ console.log(error) });
+  const script = path.join(path.dirname(__dirname), '/jobs/tidal-download.js');
+  const proceso = spawn(process.env.NODE_PATH, [script, req.params.id, req.body.quality, token ]);
   proceso.stdout.on('data', (data) => {
     const message = data.toString();
     sockets.emit(req.user, 'download-progress', { message });

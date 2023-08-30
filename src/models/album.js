@@ -55,20 +55,22 @@ const AlbumSchema = Schema(
         comments: String,
         origin_type: {
             type: String,
-            enum: ['CD_RIP', 'WEB_DOWNLOAD', 'TORRENT_DOWNLOAD']
+            enum: ['CD_RIP', 'WEB_DOWNLOAD', 'TORRENT_DOWNLOAD'],
+            required: [true, '\'origin_type\' is a required field.']
         },
         upc: String,
-        source: {
-            type: String,
-            required: [true, '\'source\' is a required field.']
-        },
+        source: String,
         source_id: Number,
         cover_url: String,
         format: {
             type: String,
             required: [true, '\'format\' is a required field.'],
-            enum: ['MP3_128', 'MP3_256', 'MP3_320', 'FLAC']
+            enum: ['FLAC', 'MP3', 'ALAC', 'ACC']
         },
+        quality: {
+            type: String,
+            enum: ['LOW', 'HIGH', 'LOSSLESS', 'HI_RES', 'MQA']
+        },        
         year: {
             type: String,
             required: [true, '\'year\' is a required field.']
