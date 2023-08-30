@@ -8,7 +8,13 @@ const getMusicTags = async(req, res) => {
         MusicTag.countDocuments(query), 
         MusicTag.find(query).populate('album', 'artist title cover_url').limit(limit).skip(offset)
     ])
-    res.json({ tags, total });
+    res.json({ 
+        tags, 
+        paging: {
+            page: Math.ceil(offset / limit) + 1,
+            total: Math.ceil(total / limit),
+        }
+    });
 }
 
 const getMusicTagById = async(req, res) => {

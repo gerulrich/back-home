@@ -7,6 +7,7 @@ const ChannelSchema = Schema({
     },
     logo: String,
     category: String,
+    number: Number,
     media_url: {
         type: String,
         required: [true, '\'media_url\' is a required field.']
