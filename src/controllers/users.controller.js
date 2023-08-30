@@ -10,7 +10,13 @@ const getUsers = async(req, res) => {
         User.find(query).limit(limit).skip(offset)
     ])
 
-    res.json({ total, users });
+    res.json({ 
+        users,
+        paging: {
+            page: Math.ceil(offset / limit) + 1,
+            total: Math.ceil(total / limit),
+        }
+    });
 }
 
 const getUserById = async(req, res) => {

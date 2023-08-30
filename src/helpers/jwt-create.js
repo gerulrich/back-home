@@ -19,7 +19,6 @@ const validateJWT = async(token = '') => {
     try {
         if (token.length < 10) return null;
         const { uid } = jwt.verify(token, process.env.JWT_SECRET_KEY);
-        console.log(uid);
         const user = await User.findById(uid);
         if (user && user.enabled)
             return user;

@@ -22,8 +22,8 @@ const getChannelById = async(req, res) => {
 }
 
 const createChannel = async(req, res) => {
-    const {name, logo, media_url, drm} = req.body;
-    const channel = new Channel({name, logo, media_url, drm});
+    const {_id, ...others} = req.body;
+    const channel = new Channel(others);
     channel.save();
     res.json(channel);
 }
@@ -37,11 +37,11 @@ const updateChannel = async(req, res) => {
 
 const deleteChannel = async(req, res) => {
     const { id } = req.params;
-    const { deletedCount } = await Channel.deleteOne({id})
+    const { deletedCount } = await Channel.deleteOne({_id: id});
     if (deletedCount > 0) {
-        return res.code(204).json({ });
+        return res.status(204).json({ });
     }
-    res.code(404).json({ msg: "Channel not found" });
+    return res.status(404).json({ msg: "Channel not found" });
 }
 
 module.exports = {
