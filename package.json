@@ -1,6 +1,6 @@
 {
   "name": "back-home",
-  "version": "0.2.9",
+  "version": "0.2.11",
   "main": "app.js",
   "repository": "git@github.com:gerulrich/back-home.git",
   "author": "German Ulrich <gerulrich@gmail.com>",
