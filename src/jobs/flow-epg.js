@@ -37,6 +37,7 @@ const get_epg =  async(flowToken, channel, epoch_from, epoch_to) => {
             season_id: p.seasonId,
             program_id: p.programId,
             channel: channel._id,
+            channel_name: channel.name,
             epg_name: channel.epg_name,
         }
         return ppp;

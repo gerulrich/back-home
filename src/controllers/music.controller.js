@@ -5,13 +5,7 @@ const { spawn } = require('child_process');
 
 const getAlbums = async(req, res) => {
     const { limit = 25, offset = 0, q } = req.query;
-    const rgx = (pattern) => new RegExp(`.*${pattern}.*`);
-    const query = q ? { $or: [
-      { title: { $regex: rgx(q), $options: "i" } },
-      { artist: { $regex: rgx(q), $options: "i" } },
-      { upc : q }
-    ]} : {};
-
+    const query = q ? {$text: {$search:q}} : {};
     const [ total, albums ] = await Promise.all([
         Album.countDocuments(query), 
         Album.find(query).sort({artist: 1, year: 1, title: 1}).limit(limit).skip(offset)
