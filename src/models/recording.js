@@ -55,7 +55,8 @@ const RecordingSchema = Schema({
         ref: 'Channel',
         required: true
     },
-    epg_name: String
+    epg_name: String,
+    channel_name: String,
 },
 {
     toObject: {
@@ -73,5 +74,9 @@ const RecordingSchema = Schema({
         }
     }
 });
+
+RecordingSchema.index({ start: 1 }, { expireAfterSeconds: 15552000 });
+RecordingSchema.index({ start: 1, end: 1, epg_name: 1, recording_id: 1 });
+RecordingSchema.index({ title: 'text', description: 'text', episode_title: 'text', genre: 'text', channel_name: 'text'}, { default_language: "spanish" });
 
 module.exports = model('Recording', RecordingSchema)

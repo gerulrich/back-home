@@ -4,11 +4,7 @@ const Recording = require("../models/recording");
 
 const getRecordings = async(req, res) => {
     const { limit = 25, offset = 0, q } = req.query;
-    const rgx = (pattern) => new RegExp(`.*${pattern}.*`);
-    const query = q ? { $or: [
-      { title: { $regex: rgx(q), $options: "i" } },
-      { description: { $regex: rgx(q), $options: "i" } },
-    ]} : {};
+    const query = q ? {$text: {$search: q}} : {};
     if (req.header('X-DISABLED') != 'true') {
         query.enabled = true;
     }
