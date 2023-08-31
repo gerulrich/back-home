@@ -95,4 +95,6 @@ const AlbumSchema = Schema(
     }
 );
 
+AlbumSchema.index({ title: 'text', artist: 'text', 'tracks.title': 'text', 'tracks.artist': 'text' }, { default_language: "spanish" });
+
 module.exports = model('Album', AlbumSchema);
