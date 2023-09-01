@@ -11,10 +11,11 @@ const get_epg =  async(flowToken, channel, epoch_from, epoch_to) => {
     console.log(`Procesando channel ${channel.name}`);
     const response = await flow.get_epg(flowToken, channel.number, epoch_from, epoch_to);
     return response[0].map(p => {
-        const media_url = (p.resources.length > 0) ? p.resources.filter(item => item.protocol == 'DASH' && item.encryption == 'Widevine')[0].url : '';
+        const urls = (p.resources.length > 0) ? p.resources.filter(item => item.protocol == 'DASH' && item.encryption == 'Widevine'): [];
+        const media_url = (urls.length > 0) ? urls[0].url : '';
         const image = p.images.filter(item => item.usage == "BROWSE")
             .map(img => `https://static.flow.com.ar/images/${p.programId}/BROWSE/224/320/0/0/${img.suffix}.${img.format}`)[0];
-        const ppp = {
+        return {
             recording_id: p.id,
             title: p.title,
             description: p.description,
@@ -37,11 +38,9 @@ const get_epg =  async(flowToken, channel, epoch_from, epoch_to) => {
             season_id: p.seasonId,
             program_id: p.programId,
             channel: channel._id,
-            epg_name: channel.epg_name,
             channel_name: channel.name,
+            epg_name: channel.epg_name,
         }
-        return ppp;
-        
     });
 }
 

@@ -72,6 +72,7 @@ const getStreamUtl = async(trackId, quality, token) => {
 const sanitize = (value) => {
     const invalid = '<>:"/\|?*&'
     value = value.replace('/', '-');
+    value = value.replace('&', '-');
     for (const char in invalid) {
         value = value.replaceAll(invalid[char], '')
     }
@@ -94,7 +95,11 @@ const getAlbumDir = (album, quality) => {
             format_folder = 'format_aac_128kbps';
             break;
     }
-    let directory = path.join(DOWNLOAD_FOLDER, format_folder, sanitize(album.artist.name) , sanitize(album.title));
+    const artists = album.artists
+        .filter(artist => artist.type == 'MAIN')
+        .map(artist => artist.name)
+        .join(' & ');
+    let directory = path.join(DOWNLOAD_FOLDER, format_folder, sanitize(artists) , sanitize(album.title));
     if (!fs.existsSync(directory)) {
         fs.mkdirSync(directory, { recursive: true });
         return directory;
@@ -146,7 +151,6 @@ const updateMetadata = async(file, cover, metadata, releaseDate) => {
     return new Promise((resolve, reject) => {
 
         const output = path.join(path.dirname(file), '_' + path.basename(file));
-
         // Comando ffmpeg para actualizar los metadatos
         const ffmpegCommand = [
             '-i', file,
@@ -158,12 +162,12 @@ const updateMetadata = async(file, cover, metadata, releaseDate) => {
             '-metadata:s:v', 'comment="Cover (front)"',
             '-disposition:v', 'attached_pic',
             '-metadata', `title=${metadata.title}`,
-            '-metadata', `artist=${metadata.artist.name}`,
-            '-metadata', `album=${metadata.album.title}`,
-            '-metadata', `album_artist=${metadata.artist.name}`,
+            '-metadata', `artist=${metadata.artist}`,
+            '-metadata', `album=${metadata.album_title}`,
+            '-metadata', `album_artist=${metadata.album_artist}`,
             '-metadata', `date=${releaseDate}`,
-            '-metadata', `track=${metadata.trackNumber}`,
-            '-metadata', `disc=${metadata.volumeNumber}`,
+            '-metadata', `track=${metadata.track_number}`,
+            '-metadata', `disc=${metadata.disc_number}`,
             '-metadata', `isrc=${metadata.isrc}`,
             '-metadata', `comment=ggu`,
             output
@@ -199,14 +203,21 @@ const updateMetadata = async(file, cover, metadata, releaseDate) => {
 const main = async() => {
     const album = await getAlbumInfo(id, token);
     const tracks = await getTracks(id, token);
-    console.log(`Descargando album ${album.title} de ${album.artist.name} con calidad ${quality}`);
+    const album_artist = album.artists
+        .filter(artist => artist.type == 'MAIN')
+        .map(artist => artist.name)
+        .join(' & ');
+    console.log(`Descargando album ${album.title} de ${album_artist} con calidad ${quality}`);
     const albumDir = getAlbumDir(album, quality);
     const cover = path.join(albumDir, 'cover.jpg');
     const cover_url = `https://resources.tidal.com/images/${album.cover.replaceAll('-', '/')}/640x640.jpg`;
     await download(cover_url, cover);
     const album_data = {
         title: album.title,
-        artist: album.artist.name,
+        artist: album.artists
+            .map(artist => artist.name)
+            .join(' & '),
+        album_artist,
         comments: '',
         origin_type: 'WEB_DOWNLOAD',
         upc: album.upc,
@@ -230,20 +241,23 @@ const main = async() => {
         const file = getFileName(albumDir, album, track);
         const media_url = file.substring(process.env.STATIC_PARENT_FOLDER.length, file.length);
         await download(manifest.urls[0], file);
-        await updateMetadata(file, cover, track, album.releaseDate)
+        const track_data = {
+            title: track.title,
+            album_artist: album.album_artist,
+            album_title: album.title,
+            artist: track.artists
+                .map(artist => artist.name)
+                .join(' & '),
+            track_number: track.trackNumber,
+            disc_number: track.volumeNumber,
+            comments: '',
+            isrc: track.isrc,
+            duration: track.duration,
+            media_url,
+        }
+        await updateMetadata(file, cover, track_data, album.releaseDate)
             .catch(error => console.error(error));
-            album_data.tracks.push(
-            {
-                title: track.title,
-                artist: track.artist.name,
-                track_number: track.trackNumber,
-                disc_number: track.volumeNumber,
-                comments: '',
-                isrc: track.isrc,
-                duration: track.duration,
-                media_url
-            }
-        );
+        album_data.tracks.push(track_data);
     }
     // create album
     await axios.request({

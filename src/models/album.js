@@ -52,6 +52,7 @@ const AlbumSchema = Schema(
             type: String,
             required: [true, '\'artist\' is a required field.']
         },
+        album_artist: String,
         comments: String,
         origin_type: {
             type: String,
