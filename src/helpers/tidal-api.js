@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 
 const TIDAL_REFRESH_TOKEN = process.env.TIDAL_REFRESH_TOKEN;
 const TIDAL_CLIENT_ID = process.env.TIDAL_CLIENT_ID;
-const TIDAL_CLIENT_SECRET = process.env.TIDAL_CLIENT_SECRET;
 let TIDAL_ACCESS_TOKEN = '';
 
 const getToken = async() => {
@@ -27,13 +26,12 @@ const renewToken = async() => {
   data.append('grant_type', 'refresh_token');
   data.append('refresh_token', TIDAL_REFRESH_TOKEN);
   data.append('client_id', TIDAL_CLIENT_ID);
-  data.append('scope', 'r_usr+w_usr+w_sub');
+  data.append('scope', 'r_usr+w_usr');
 
   const config = {
     maxRedirects: 0,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${Buffer.from(`${TIDAL_CLIENT_ID}:${TIDAL_CLIENT_SECRET}`).toString('base64')}`,
     },
   };
 
