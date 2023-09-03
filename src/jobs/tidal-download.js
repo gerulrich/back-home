@@ -3,8 +3,9 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+const { decryptFile, decryptSecurityToken } = require('../helpers/decrypt-utils');
 
-function getFormattedDate() {
+const getFormattedDate = () => {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -16,18 +17,15 @@ function getFormattedDate() {
 }
   
 console.log = function(message) {
-    const formattedDate = getFormattedDate();
-    process.stdout.write(`[INFO] (${formattedDate}) - ${message}`);
+    process.stdout.write(`[INFO] (${getFormattedDate()}) - ${message}`);
 };
   
 console.debug = function(message) {
-    const formattedDate = getFormattedDate();
-    process.stdout.write(`[DEBUG] (${formattedDate}) - ${message}`);
+    process.stdout.write(`[DEBUG] (${getFormattedDate()}) - ${message}`);
 };
   
 console.error = function(message) {
-    const formattedDate = getFormattedDate();
-    process.stderr.write(`[ERROR] (${formattedDate}) - ${message}`);
+    process.stderr.write(`[ERROR] (${getFormattedDate()}) - ${message}`);
 };
 
 const TIDAL_URL = 'https://api.tidalhifi.com';
@@ -36,7 +34,6 @@ const DOWNLOAD_FOLDER = process.env.MUSIC_FOLDER;
 const id = process.argv[2];
 const quality = process.argv[3];
 const token = process.argv[4];
-
 
 const sleep = async(ms) => {
     console.debug(`Esperando ${ms/1000}s estre descargas`);
@@ -240,7 +237,18 @@ const main = async() => {
         const manifest = JSON.parse(Buffer.from(data.manifest, 'base64').toString('utf-8'));
         const file = getFileName(albumDir, album, track);
         const media_url = file.substring(process.env.STATIC_PARENT_FOLDER.length, file.length);
-        await download(manifest.urls[0], file);
+
+        if (manifest.keyId) {
+            const encryptedFile = file + '.part';
+            await download(manifest.urls[0], encryptedFile);
+            const { key, nonce } = decryptSecurityToken(manifest.keyId);
+            decryptFile(encryptedFile, file, key, nonce);
+            fs.unlink(encryptedFile, () => {
+                console.log(`Eliminando archivo encriptado: "${path.basename(encryptedFile)}"`);
+            });
+        } else {
+            await download(manifest.urls[0], file);
+        }
         const track_data = {
             title: track.title,
             album_artist: album.album_artist,
