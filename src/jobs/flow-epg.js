@@ -2,16 +2,16 @@ const flow = require('../helpers/flow-api');
 const Channel = require('../models/channel');
 const Recording = require('../models/recording');
 
-const sleep = async(ms) => {
-    console.debug(`Esperando ${ms/1000}s estre descargas`);
+const sleep = async (ms) => {
+    console.debug(`Esperando ${ms / 1000}s estre descargas`);
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const get_epg =  async(flowToken, channel, epoch_from, epoch_to) => {
+const get_epg = async (flowToken, channel, epoch_from, epoch_to) => {
     console.log(`Procesando channel ${channel.name}`);
     const response = await flow.get_epg(flowToken, channel.number, epoch_from, epoch_to);
     return response[0].map(p => {
-        const urls = (p.resources.length > 0) ? p.resources.filter(item => item.protocol == 'DASH' && item.encryption == 'Widevine'): [];
+        const urls = (p.resources.length > 0) ? p.resources.filter(item => item.protocol == 'DASH' && item.encryption == 'Widevine') : [];
         const media_url = (urls.length > 0) ? urls[0].url : '';
         const image = p.images.filter(item => item.usage == "BROWSE")
             .map(img => `https://static.flow.com.ar/images/${p.programId}/BROWSE/224/320/0/0/${img.suffix}.${img.format}`)[0];
@@ -21,7 +21,7 @@ const get_epg =  async(flowToken, channel, epoch_from, epoch_to) => {
             description: p.description,
             start: new Date(p.startTime).toISOString(),
             end: new Date(p.endTime).toISOString(),
-            media_url,
+            media_url: media_url.replace("http://", "https://"),
             drm: (!!media_url) ? channel.drm : {},
             enabled: channel.enabled,
             image,
@@ -44,8 +44,8 @@ const get_epg =  async(flowToken, channel, epoch_from, epoch_to) => {
     });
 }
 
-const save_epg =  async(epg_data) => {
-    for (const rec of epg_data ) {
+const save_epg = async (epg_data) => {
+    for (const rec of epg_data) {
         const conditions = {
             recording_id: rec.recording_id,
             start: rec.start,
@@ -59,13 +59,13 @@ const save_epg =  async(epg_data) => {
     }
 }
 
-const epg_job = async() => {
+const epg_job = async () => {
     const flowToken = await flow.getToken();
     var ts = Math.round((new Date()).getTime() / 1000);
-    const epoch_from = ts - 24*60*60;
-    const epoch_to = ts + 24*60*60;
+    const epoch_from = ts - 24 * 60 * 60;
+    const epoch_to = ts + 24 * 60 * 60;
     const channels = await Channel.find({});
-    for(const channel of channels) {
+    for (const channel of channels) {
         if (channel.number) {
             const epg_data = await get_epg(flowToken, channel, epoch_from, epoch_to);
             await save_epg(epg_data);
