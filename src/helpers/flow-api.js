@@ -7,13 +7,19 @@ const FLOW_CLIENT_ID = process.env.FLOW_CLIENT_ID;
 let FLOW_ACCESS_TOKEN = '';
 
 const getToken = async() => {
-  if (expiredToken()) {
-    FLOW_ACCESS_TOKEN = await renewToken();
-  }
-  return FLOW_ACCESS_TOKEN;
+    console.info("Obteniendo token");
+    try {
+        if (expiredToken()) {
+            FLOW_ACCESS_TOKEN = await renewToken();
+        }
+    } catch (error) {
+        FLOW_ACCESS_TOKEN = '';
+    }
+    return FLOW_ACCESS_TOKEN;
 }
 
 const expiredToken = () => {
+    console.info("verificando si el token esta expirado");
     try {
         const decodedToken = jwt.decode(FLOW_ACCESS_TOKEN);
         return (decodedToken.exp < Date.now() / 1000);
@@ -23,6 +29,7 @@ const expiredToken = () => {
 }
 
 const renewToken = async() => {
+    console.info("Renovando token for epg");
     let config = {
         method: 'POST',
         maxBodyLength: Infinity,
@@ -49,10 +56,13 @@ const renewToken = async() => {
         }
     };
     const {data} = await axios.request(config);
+    if (data.jwt)
+        console.log("Token renovado")
     return data.jwt;
 }
 
 const get_epg =  async(token, channel, epoch_from, epoch_to) => {
+    console.info(`Getting epg for channel ${channel}`)
     const config = {
       method: 'POST',
       url: `https://web.flow.com.ar/api/v1/content/channel?size=1440&dateFrom=${epoch_from}000&dateTo=${epoch_to}999&tvRating=6&all=true`,
