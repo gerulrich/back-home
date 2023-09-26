@@ -24,7 +24,7 @@ const validateJWT = async(token = '') => {
             return user;
         return null;
     } catch (error) {
-        console.log(error);
+        console.error("Invalid token or token expired: ", error);
         return null;
     }
 }

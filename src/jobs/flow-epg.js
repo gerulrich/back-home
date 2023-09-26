@@ -10,6 +10,7 @@ const sleep = async (ms) => {
 const get_epg = async (flowToken, channel, epoch_from, epoch_to) => {
     console.log(`Procesando channel ${channel.name}`);
     const response = await flow.get_epg(flowToken, channel.number, epoch_from, epoch_to);
+    // console.log('EPG response: ', response);
     return response[0].map(p => {
         const urls = (p.resources.length > 0) ? p.resources.filter(item => item.protocol == 'DASH' && item.encryption == 'Widevine') : [];
         const media_url = (urls.length > 0) ? urls[0].url : '';
@@ -60,7 +61,16 @@ const save_epg = async (epg_data) => {
 }
 
 const epg_job = async () => {
-    const flowToken = await flow.getToken();
+    let flowToken = '';
+    let retries = 5;
+    while (flowToken == '' && retries > 0) {
+        flowToken = await flow.getToken()
+        retries = retries -1;
+        if (flowToken == '') 
+            sleep(1000);
+    };
+    if (flowToken == '')
+        return;
     var ts = Math.round((new Date()).getTime() / 1000);
     const epoch_from = ts - 24 * 60 * 60;
     const epoch_to = ts + 24 * 60 * 60;
@@ -69,10 +79,9 @@ const epg_job = async () => {
         if (channel.number) {
             const epg_data = await get_epg(flowToken, channel, epoch_from, epoch_to);
             await save_epg(epg_data);
-            sleep(1000);
+            sleep(2500);
         }
     };
-
 }
 
 module.exports = {
