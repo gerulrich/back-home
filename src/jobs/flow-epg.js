@@ -77,8 +77,12 @@ const epg_job = async () => {
     const channels = await Channel.find({});
     for (const channel of channels) {
         if (channel.number) {
-            const epg_data = await get_epg(flowToken, channel, epoch_from, epoch_to);
-            await save_epg(epg_data);
+            try {
+                const epg_data = await get_epg(flowToken, channel, epoch_from, epoch_to);
+                await save_epg(epg_data);
+            } catch (error) {
+                console.error(error);
+            }
             sleep(2500);
         }
     };
