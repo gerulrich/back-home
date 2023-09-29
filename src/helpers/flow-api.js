@@ -62,6 +62,8 @@ const renewToken = async() => {
     const {data} = await axios.request(config);
     if (data.jwt)
         console.log("Token renovado")
+    else
+        console.log("Error al renovar el Token")
     return data.jwt;
 }
 

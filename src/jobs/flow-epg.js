@@ -65,9 +65,9 @@ const get_token = async() => {
     let flowToken = '';
     let retries = 5;
     while (flowToken == '' && retries > 0) {
-        flowToken = await flow.getToken()
+        flowToken = await flow.getToken();
         retries = retries -1;
-        if (flowToken == '') 
+        if (flowToken == '')
             await sleep((5 - retries) * random(5,10));
     };
     return flowToken;
@@ -80,7 +80,7 @@ const epg_job = async () => {
     const channels = await Channel.find({});
     for (const channel of channels) {
         let flowToken = await get_token();
-        if (channel.number) {
+        if (flowToken != '' && channel.number) {
             try {
                 const epg_data = await get_epg(flowToken, channel, epoch_from, epoch_to);
                 await save_epg(epg_data);
