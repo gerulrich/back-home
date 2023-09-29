@@ -6,6 +6,10 @@ const FLOW_PASSWORD = process.env.FLOW_PASSWORD;
 const FLOW_CLIENT_ID = process.env.FLOW_CLIENT_ID;
 let FLOW_ACCESS_TOKEN = '';
 
+const cleanToken = () => {
+    FLOW_ACCESS_TOKEN = ''
+}
+
 const getToken = async() => {
     console.info("Obteniendo token");
     try {
@@ -80,5 +84,6 @@ const get_epg =  async(token, channel, epoch_from, epoch_to) => {
 
 module.exports = { 
     getToken,
-    get_epg
+    get_epg,
+    cleanToken
 }

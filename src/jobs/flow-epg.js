@@ -7,10 +7,11 @@ const sleep = async (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+const random = (min, max) => Math.floor(((max - min)*Math.random() + 3)*1000);
+
 const get_epg = async (flowToken, channel, epoch_from, epoch_to) => {
     console.log(`Procesando channel ${channel.name}`);
     const response = await flow.get_epg(flowToken, channel.number, epoch_from, epoch_to);
-    // console.log('EPG response: ', response);
     return response[0].map(p => {
         const urls = (p.resources.length > 0) ? p.resources.filter(item => item.protocol == 'DASH' && item.encryption == 'Widevine') : [];
         const media_url = (urls.length > 0) ? urls[0].url : '';
@@ -60,30 +61,35 @@ const save_epg = async (epg_data) => {
     }
 }
 
-const epg_job = async () => {
+const get_token = async() => {
     let flowToken = '';
     let retries = 5;
     while (flowToken == '' && retries > 0) {
         flowToken = await flow.getToken()
         retries = retries -1;
         if (flowToken == '') 
-            sleep(1000);
+            await sleep((5 - retries) * random(5,10));
     };
-    if (flowToken == '')
-        return;
+    return flowToken;
+}
+
+const epg_job = async () => {
     var ts = Math.round((new Date()).getTime() / 1000);
     const epoch_from = ts - 24 * 60 * 60;
     const epoch_to = ts + 24 * 60 * 60;
     const channels = await Channel.find({});
     for (const channel of channels) {
+        let flowToken = await get_token();
         if (channel.number) {
             try {
                 const epg_data = await get_epg(flowToken, channel, epoch_from, epoch_to);
                 await save_epg(epg_data);
+                await sleep(random(5,10));
             } catch (error) {
-                console.error(error);
+                flow.cleanToken();
+                console.error(`Error procesando canal ${channel.name}`);
+                await sleep(random(20,60));
             }
-            sleep(2500);
         }
     };
 }
