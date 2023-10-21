@@ -12,7 +12,8 @@ const {
     getTrackById,
     updateTrackById, 
     downloadProgress,
-    getSpectrumpicTrackById
+    getSpectrumpicTrackById,
+    getAlbumStats
 } = require('../controllers/music.controller');
 
 const router = Router();
@@ -96,6 +97,12 @@ router.get('/albums/:id/tracks/:trackId/spectrumpic', [
     check('id', 'An invalid album id was supplied').isMongoId(),
     requestValidator
 ], getSpectrumpicTrackById);
+
+router.get('/stats', [
+    validateJWT,
+    rolesAllowed('USER_ROLE', 'ADMIN_ROLE'),
+    requestValidator
+],getAlbumStats);
 
 
 router.post('/download/progress', downloadProgress);
