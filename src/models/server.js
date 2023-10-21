@@ -60,7 +60,8 @@ class Server {
     }
 
     jobs() {
-        cron.schedule(process.env.FLOW_EPG_CRON, () => epg_job());
+        if (process.env.FLOW_EPG_CRON)
+            cron.schedule(process.env.FLOW_EPG_CRON, () => epg_job());
     }
 
     listen() {
