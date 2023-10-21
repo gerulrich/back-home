@@ -142,6 +142,28 @@ const downloadProgress = async(req, res) => {
     res.status(404).json({message: `socket for user ${uid} not found`});
 }
 
+const getAlbumStats = async(req, res) => {
+    let stats = await Album.aggregate([
+        {
+          $group: { _id: { format: '$format', quality: { $ifNull: ['$quality', ''] }}, count: { $sum: 1 }},
+        },
+        {
+            $project: { _id: 0, format: '$_id.format', quality: '$_id.quality', count: '$count'}
+        },
+        {
+            $group: { 
+                _id: { 
+                    format: '$format',
+                    quality: { $cond: { if: { $eq: ['$quality', ''] }, then: 'UNKNOWN', else: '$quality', }}
+                },
+                count: { $sum: '$count', }
+            }
+        }
+      ]);
+      res.json(stats);
+
+}
+
 module.exports = {
     getAlbums,
     getAlbumById,
@@ -153,5 +175,6 @@ module.exports = {
     getTrackById,
     getSpectrumpicTrackById,
     updateTrackById,
-    downloadProgress
+    downloadProgress,
+    getAlbumStats
 }
