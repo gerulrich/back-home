@@ -1,3 +1,4 @@
+const { generateSecurePathHash } = require("../helpers/secure-url");
 const Album  = require("../models/album");
 const sockets = require("../websocket/user-sockets");
 const { spawn } = require('child_process');
@@ -86,6 +87,24 @@ const getTrackById = async(req, res) => {
     res.json(track);
 }
 
+const getMediaUrl = async(req, res) => {
+    const { id, trackId } = req.params;
+    const album = await Album.findById(id);
+    if (!album) {
+        return res.status(404).json({msg: `Album ${id} not found`});
+    }
+    const [track] = album.tracks.filter(t => t._id.toString() == trackId);
+    if (!track) {
+        return res.status(404).json({msg: `Track ${trackId} not found`});
+    }
+    // TODO redirect to 
+    const expires = Math.ceil(Date.now() / 1000) + 14400;
+    const hash = generateSecurePathHash(track.media_url, expires);
+    const path = track.media_url.split('/').map(p => encodeURIComponent(p)).join('/');
+    const media_url = `${process.env.NGINX_DOMAIN}${path}?h=${hash}&e=${expires}`;
+    res.redirect(media_url);
+}
+
 const getSpectrumpicTrackById = async(req, res) => {
     const { id, trackId } = req.params;
     const album = await Album.findById(id);
@@ -172,6 +191,7 @@ module.exports = {
     updateAlbum,
     deleteAlbum,
     getTracksByAlbumId,
+    getMediaUrl,
     getTrackById,
     getSpectrumpicTrackById,
     updateTrackById,
