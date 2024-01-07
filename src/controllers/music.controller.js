@@ -102,7 +102,9 @@ const getMediaUrl = async(req, res) => {
     const hash = generateSecurePathHash(track.media_url, expires);
     const path = track.media_url.split('/').map(p => encodeURIComponent(p)).join('/');
     const media_url = `${process.env.NGINX_DOMAIN}${path}?h=${hash}&e=${expires}`;
-    res.redirect(media_url);
+    res.json({
+        media_url
+    });
 }
 
 const getSpectrumpicTrackById = async(req, res) => {
