@@ -2,6 +2,7 @@ const Recording = require("../models/recording");
 
 const getRecordings = async (req, res) => {
     const { limit = 25, offset = 0, q } = req.query;
+    const limitNumber = parseInt(limit);
     const query = q ? { $text: { $search: q } } : { };
     query.start = { $gt: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000) };
     if (req.header('X-DISABLED') != 'true') {
@@ -17,7 +18,7 @@ const getRecordings = async (req, res) => {
                     recordings: { $push: "$$ROOT" },
                 }
             }
-        ]).limit(limit).skip(offset).sort({start: 1})
+        ]).limit(limitNumber).skip(offset).sort({start: 1})
     ]);
 
     const r = results.map(elem => {
