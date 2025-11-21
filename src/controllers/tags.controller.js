@@ -1,6 +1,7 @@
 const MusicTag = require("../models/music-tag");
 const sockets = require("../websocket/user-sockets");
 const logger = require("../helpers/logger");
+const heos = require("../helpers/heos-api");
 
 const getMusicTags = async(req, res) => {
     const { limit = 25, offset = 0, q } = req.query;
@@ -65,27 +66,73 @@ const deleteMusicTag = async(req, res) => {
 const playMusicTag = async(req, res) => {
     const { id } = req.params;
     logger.info(`[playMusicTag] Request to play tag with id: ${id}`);
-    const tag = await MusicTag.findById(id).populate('album', 'artist title cover_url');
+    const tag = await MusicTag.findById(id).populate('album', 'artist title cover_url source source_id');
     if (!tag) {
         logger.warn(`[playMusicTag] MusicTag ${id} not found`);
         return res.status(404).json({msg: `MusicTag ${id} not found`});
     }
-    logger.info(`[playMusicTag] Playing tag ${id} - Album: ${tag.album.title} by ${tag.album.artist}, Source: ${tag.source}`);
-    // TODO: Implementar lógica de reproducción según el source (local/heos)
-    res.json({ action: 'play', tag });
+    logger.info(`[playMusicTag] Playing tag ${id} - Album: ${tag.album.title} by ${tag.album.artist}, Source: ${tag.source}, Album Source: ${tag.album.source}`);
+    
+    // Si el source del tag es HEOS y el álbum proviene de TIDAL
+    if (tag.source === 'heos' && tag.album.source === 'TIDAL' && tag.album.source_id) {
+        try {
+            logger.info(`[playMusicTag] Playing TIDAL album ${tag.album.source_id} via HEOS`);
+            await heos.playTidalAlbum(tag.album.source_id.toString());
+            return res.json({ 
+                action: 'play', 
+                tag,
+                playback: 'heos',
+                status: 'success',
+                message: `Playing ${tag.album.title} via HEOS` 
+            });
+        } catch (error) {
+            logger.error(`[playMusicTag] Error playing via HEOS: ${error.message}`);
+            return res.status(500).json({
+                msg: 'Error playing via HEOS',
+                error: error.message
+            });
+        }
+    }
+    
+    // Reproducción local u otros casos
+    logger.info(`[playMusicTag] Local playback for tag ${id}`);
+    res.json({ action: 'play', tag, playback: 'local' });
 }
 
 const queueMusicTag = async(req, res) => {
     const { id } = req.params;
     logger.info(`[queueMusicTag] Request to queue tag with id: ${id}`);
-    const tag = await MusicTag.findById(id).populate('album', 'artist title cover_url');
+    const tag = await MusicTag.findById(id).populate('album', 'artist title cover_url source source_id');
     if (!tag) {
         logger.warn(`[queueMusicTag] MusicTag ${id} not found`);
         return res.status(404).json({msg: `MusicTag ${id} not found`});
     }
-    logger.info(`[queueMusicTag] Queueing tag ${id} - Album: ${tag.album.title} by ${tag.album.artist}, Source: ${tag.source}`);
-    // TODO: Implementar lógica de cola según el source (local/heos)
-    res.json({ action: 'queue', tag });
+    logger.info(`[queueMusicTag] Queueing tag ${id} - Album: ${tag.album.title} by ${tag.album.artist}, Source: ${tag.source}, Album Source: ${tag.album.source}`);
+    
+    // Si el source del tag es HEOS y el álbum proviene de TIDAL
+    if (tag.source === 'heos' && tag.album.source === 'TIDAL' && tag.album.source_id) {
+        try {
+            logger.info(`[queueMusicTag] Queueing TIDAL album ${tag.album.source_id} via HEOS`);
+            await heos.queueTidalAlbum(tag.album.source_id.toString());
+            return res.json({ 
+                action: 'queue', 
+                tag,
+                playback: 'heos',
+                status: 'success',
+                message: `Queued ${tag.album.title} via HEOS` 
+            });
+        } catch (error) {
+            logger.error(`[queueMusicTag] Error queueing via HEOS: ${error.message}`);
+            return res.status(500).json({
+                msg: 'Error queueing via HEOS',
+                error: error.message
+            });
+        }
+    }
+    
+    // Cola local u otros casos
+    logger.info(`[queueMusicTag] Local queue for tag ${id}`);
+    res.json({ action: 'queue', tag, playback: 'local' });
 }
 
 const sendCodeToClients = (req, res) => {
