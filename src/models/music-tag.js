@@ -10,6 +10,16 @@ const MusicTagSchema = Schema({
         type: Boolean,
         default: true
     },
+    type: {
+        type: String,
+        enum: ['QR', 'RFID'],
+        required: [true, '\'type\' is a required field.']
+    },
+    source: {
+        type: String,
+        enum: ['local', 'heos'],
+        required: [true, '\'source\' is a required field.']
+    },
     album: {
         type: Schema.Types.ObjectId,
         ref: 'Album',
