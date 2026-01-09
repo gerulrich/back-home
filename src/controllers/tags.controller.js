@@ -2,6 +2,7 @@ const MusicTag = require("../models/music-tag");
 const sockets = require("../websocket/user-sockets");
 const logger = require("../helpers/logger");
 const heos = require("../helpers/heos-api");
+const mpd = require("../helpers/mpd-api");
 
 const getMusicTags = async(req, res) => {
     const { limit = 25, offset = 0, q } = req.query;
@@ -94,9 +95,33 @@ const playMusicTag = async(req, res) => {
         }
     }
     
-    // Reproducción local u otros casos
-    logger.info(`[playMusicTag] Local playback for tag ${id}`);
-    res.json({ action: 'play', tag, playback: 'local' });
+    // Si el source del tag es local, reproducir mediante MPD
+    if (tag.source === 'local') {
+        try {
+            logger.info(`[playMusicTag] Playing local album "${tag.album.title}" by "${tag.album.artist}" via MPD`);
+            await mpd.playLocalAlbum(tag.album.artist, tag.album.title);
+            return res.json({ 
+                action: 'play', 
+                tag,
+                playback: 'mpd',
+                status: 'success',
+                message: `Playing ${tag.album.title} via MPD` 
+            });
+        } catch (error) {
+            logger.error(`[playMusicTag] Error playing via MPD: ${error.message}`);
+            return res.status(500).json({
+                msg: 'Error playing via MPD',
+                error: error.message
+            });
+        }
+    }
+    
+    // Otros casos no implementados
+    logger.warn(`[playMusicTag] Unsupported playback configuration for tag ${id}`);
+    res.status(400).json({ 
+        msg: 'Unsupported playback configuration',
+        tag 
+    });
 }
 
 const queueMusicTag = async(req, res) => {
@@ -130,9 +155,33 @@ const queueMusicTag = async(req, res) => {
         }
     }
     
-    // Cola local u otros casos
-    logger.info(`[queueMusicTag] Local queue for tag ${id}`);
-    res.json({ action: 'queue', tag, playback: 'local' });
+    // Si el source del tag es local, agregar a la cola mediante MPD
+    if (tag.source === 'local') {
+        try {
+            logger.info(`[queueMusicTag] Queueing local album "${tag.album.title}" by "${tag.album.artist}" via MPD`);
+            await mpd.queueLocalAlbum(tag.album.artist, tag.album.title);
+            return res.json({ 
+                action: 'queue', 
+                tag,
+                playback: 'mpd',
+                status: 'success',
+                message: `Queued ${tag.album.title} via MPD` 
+            });
+        } catch (error) {
+            logger.error(`[queueMusicTag] Error queueing via MPD: ${error.message}`);
+            return res.status(500).json({
+                msg: 'Error queueing via MPD',
+                error: error.message
+            });
+        }
+    }
+    
+    // Otros casos no implementados
+    logger.warn(`[queueMusicTag] Unsupported queue configuration for tag ${id}`);
+    res.status(400).json({ 
+        msg: 'Unsupported queue configuration',
+        tag 
+    });
 }
 
 const sendCodeToClients = (req, res) => {
