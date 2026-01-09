@@ -128,7 +128,7 @@ const getSpectrumpicTrackById = async(req, res) => {
     ];  
       
     // Iniciar el proceso de ffmpeg
-    const ffmpegProcess = spawn('ffmpeg', ffmpegCommand);
+    const ffmpegProcess = spawn(process.env.FFMPEG_PATH, ffmpegCommand);
     ffmpegProcess.stdout.pipe(res);
 
 }
