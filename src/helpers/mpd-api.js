@@ -40,18 +40,26 @@ const sendMpdCommand = async (commands) => {
             }
             
             // Esperamos la respuesta completa (termina con OK o ACK)
-            if (receivedWelcome && (responseData.includes('\nOK\n') || responseData.includes('\nACK '))) {
-                clearTimeout(timeout);
-                client.destroy();
+            // Para command_list: cada comando responde con "list_OK" y al final viene "OK"
+            if (receivedWelcome) {
+                logger.info(`[MPD] Received data: ${JSON.stringify(responseData)}`);
                 
-                if (responseData.includes('ACK ')) {
-                    const errorMatch = responseData.match(/ACK \[(.*?)\] \{(.*?)\} (.*)/);
-                    const errorMsg = errorMatch ? errorMatch[3] : 'Unknown MPD error';
-                    logger.error(`[MPD] Error response: ${errorMsg}`);
-                    reject(new Error(`MPD error: ${errorMsg}`));
-                } else {
-                    logger.info(`[MPD] Success response received`);
-                    resolve(responseData.trim());
+                const hasError = responseData.includes('ACK ');
+                const hasOK = responseData.match(/^OK$/m) || responseData.match(/\nOK$/);
+                
+                if (hasError || hasOK) {
+                    clearTimeout(timeout);
+                    client.destroy();
+                    
+                    if (hasError) {
+                        const errorMatch = responseData.match(/ACK \[(.*?)\] \{(.*?)\} (.*)/);
+                        const errorMsg = errorMatch ? errorMatch[3] : 'Unknown MPD error';
+                        logger.error(`[MPD] Error response: ${errorMsg}`);
+                        reject(new Error(`MPD error: ${errorMsg}`));
+                    } else {
+                        logger.info(`[MPD] Success response received`);
+                        resolve(responseData.trim());
+                    }
                 }
             }
         });
