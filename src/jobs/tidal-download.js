@@ -171,7 +171,7 @@ const updateMetadata = async(file, cover, metadata, releaseDate) => {
         ];
 
         // Ejecutar el comando ffmpeg mediante child_process.spawn
-        const ffmpegProcess = spawn('ffmpeg', ffmpegCommand);
+        const ffmpegProcess = spawn(process.env.FFMPEG_PATH, ffmpegCommand);
 
         // Escuchar eventos de salida estándar y error estándar
         ffmpegProcess.stdout.on('data', (data) => {
