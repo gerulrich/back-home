@@ -3,6 +3,7 @@ const sockets = require("../websocket/user-sockets");
 const logger = require("../helpers/logger");
 const heos = require("../helpers/heos-api");
 const mpd = require("../helpers/mpd-api");
+const denon = require("../helpers/denon-api");
 
 const getMusicTags = async(req, res) => {
     const { limit = 25, offset = 0, q } = req.query;
@@ -99,12 +100,27 @@ const playMusicTag = async(req, res) => {
     if (tag.source === 'local') {
         try {
             logger.info(`[playMusicTag] Playing local album "${tag.album.title}" by "${tag.album.artist}" via MPD`);
+            
+            // Verificar y encender el amplificador Denon antes de reproducir
+            logger.info(`[playMusicTag] Ensuring Denon amplifier is ready...`);
+            const denonStatus = await denon.ensurePowerOnAndSource();
+            logger.info(`[playMusicTag] Denon status: ${JSON.stringify(denonStatus)}`);
+            
+            // Si el amplificador fue encendido, esperar para que esté listo
+            if (!denonStatus.wasPoweredOn) {
+                const warmupDelay = parseInt(process.env.DENON_WARMUP_DELAY || '5000');
+                logger.info(`[playMusicTag] Amplifier was powered on, waiting ${warmupDelay}ms for warmup...`);
+                await new Promise(resolve => setTimeout(resolve, warmupDelay));
+                logger.info(`[playMusicTag] Warmup complete, proceeding with playback`);
+            }
+            
             await mpd.playLocalAlbum(tag.album.artist, tag.album.title);
             return res.json({ 
                 action: 'play', 
                 tag,
                 playback: 'mpd',
                 status: 'success',
+                denonStatus,
                 message: `Playing ${tag.album.title} via MPD` 
             });
         } catch (error) {
@@ -159,12 +175,38 @@ const queueMusicTag = async(req, res) => {
     if (tag.source === 'local') {
         try {
             logger.info(`[queueMusicTag] Queueing local album "${tag.album.title}" by "${tag.album.artist}" via MPD`);
+            
+            // Verificar el estado del amplificador Denon
+            const isPowerOn = await denon.isPowerOn();
+            logger.info(`[queueMusicTag] Denon amplifier power status: ${isPowerOn ? 'ON' : 'OFF'}`);
+            
+            let denonStatus = null;
+            
+            // Si el amplificador está apagado, encenderlo y configurar la fuente
+            // ya que si está apagado, se asume que se quiere comenzar a reproducir
+            if (!isPowerOn) {
+                logger.info(`[queueMusicTag] Amplifier is off, will power on and select source before queueing`);
+                denonStatus = await denon.ensurePowerOnAndSource();
+                logger.info(`[queueMusicTag] Denon ready: ${JSON.stringify(denonStatus)}`);;
+                
+                // Esperar para que el amplificador esté completamente listo
+                const warmupDelay = parseInt(process.env.DENON_WARMUP_DELAY || '5000');
+                logger.info(`[queueMusicTag] Waiting ${warmupDelay}ms for amplifier warmup...`);
+                await new Promise(resolve => setTimeout(resolve, warmupDelay));
+                logger.info(`[queueMusicTag] Warmup complete, proceeding with queueing`);
+            } else {
+                // Si ya está encendido, solo agregamos a la cola sin cambiar nada
+                logger.info(`[queueMusicTag] Amplifier is already on, adding to queue without changes`);
+                denonStatus = { wasPoweredOn: true, status: 'already_on' };
+            }
+            
             await mpd.queueLocalAlbum(tag.album.artist, tag.album.title);
             return res.json({ 
                 action: 'queue', 
                 tag,
                 playback: 'mpd',
                 status: 'success',
+                denonStatus,
                 message: `Queued ${tag.album.title} via MPD` 
             });
         } catch (error) {
