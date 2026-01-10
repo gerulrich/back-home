@@ -117,10 +117,9 @@ const getSpectrumpicTrackById = async(req, res) => {
     if (!track) {
         return res.status(404).json({msg: `Track ${trackId} not found`});
     }
-    const inputFilePath = process.env.STATIC_PARENT_FOLDER + track.media_url;
-
+    
     const ffmpegCommand = [
-        '-i', inputFilePath,
+        '-i', track.file_path,
         '-lavfi', 'showspectrumpic=s=1024x512:mode=combined:color=rainbow:fscale=lin',
         '-f', 'image2pipe',
         '-vcodec', 'png',
