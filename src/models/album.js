@@ -17,6 +17,10 @@ const TrackSchema = Schema(
         media_url: {
             type: String,
             required: [true, '\'media_url\' is a required field.']
+        },
+        file_path: {
+            type: String,
+            required: [true, '\'file_path\' is a required field.']
         }
     },
     {

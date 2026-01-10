@@ -236,7 +236,7 @@ const main = async() => {
         // TODO chequear encryptionType = NONE
         const manifest = JSON.parse(Buffer.from(data.manifest, 'base64').toString('utf-8'));
         const file = getFileName(albumDir, album, track);
-        const media_url = file.substring(process.env.STATIC_PARENT_FOLDER.length, file.length);
+        const media_url = process.env.STATIC_PARENT_FOLDER + file.substring(process.env.MUSIC_FOLDER.length, file.length);
 
         if (manifest.keyId) {
             const encryptedFile = file + '.part';
@@ -262,6 +262,7 @@ const main = async() => {
             isrc: track.isrc,
             duration: track.duration,
             media_url,
+            file_path: file,
         }
         await updateMetadata(file, cover, track_data, album.releaseDate)
             .catch(error => console.error(error));
