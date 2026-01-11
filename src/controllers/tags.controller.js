@@ -155,11 +155,31 @@ const queueMusicTag = async(req, res) => {
         try {
             logger.info(`[queueMusicTag] Queueing TIDAL album ${tag.album.source_id} via HEOS`);
             await heos.queueTidalAlbum(tag.album.source_id.toString());
+            
+            // Verificar si el player está reproduciendo
+            const playState = await heos.getPlayState();
+            logger.info(`[queueMusicTag] HEOS play state: ${JSON.stringify(playState)}`);
+            
+            // Si no está reproduciendo, iniciar la reproducción
+            if (playState.heos && playState.heos.message && !playState.heos.message.includes('state=play')) {
+                logger.info(`[queueMusicTag] Player not playing, starting playback`);
+                await heos.resumePlayer();
+                return res.json({ 
+                    action: 'queue', 
+                    tag,
+                    playback: 'heos',
+                    status: 'success',
+                    autoplay: true,
+                    message: `Queued and started playing ${tag.album.title} via HEOS` 
+                });
+            }
+            
             return res.json({ 
                 action: 'queue', 
                 tag,
                 playback: 'heos',
                 status: 'success',
+                autoplay: false,
                 message: `Queued ${tag.album.title} via HEOS` 
             });
         } catch (error) {
