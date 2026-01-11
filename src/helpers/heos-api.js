@@ -105,7 +105,7 @@ const queueTidalAlbum = async (tidalAlbumId, playerId = HEOS_PLAYER_ID) => {
 
     try {
         // Agregamos el álbum de TIDAL a la cola sin limpiarla
-        const addToQueueCommand = `browse/add_to_queue?pid=${playerId}&sid=13&cid=album:${tidalAlbumId}&aid=4`;
+        const addToQueueCommand = `browse/add_to_queue?pid=${playerId}&sid=10&cid=LIBALBUM-${tidalAlbumId}&aid=1`;
         const result = await sendHeosCommand(addToQueueCommand);
         
         logger.info(`[HEOS] Successfully queued TIDAL album ${tidalAlbumId}`);
@@ -171,11 +171,32 @@ const resumePlayer = async (playerId = HEOS_PLAYER_ID) => {
     }
 };
 
+/**
+ * Obtiene el estado de reproducción del player
+ * @param {string} playerId - ID del player HEOS
+ * @returns {Promise<Object>} Estado del player (contiene state: 'play' | 'pause' | 'stop')
+ */
+const getPlayState = async (playerId = HEOS_PLAYER_ID) => {
+    if (!playerId) {
+        throw new Error('HEOS_PLAYER_ID not configured');
+    }
+
+    try {
+        const result = await sendHeosCommand(`player/get_play_state?pid=${playerId}`);
+        logger.info(`[HEOS] Player ${playerId} play state retrieved`);
+        return result;
+    } catch (error) {
+        logger.error(`[HEOS] Error getting play state: ${error.message}`);
+        throw error;
+    }
+};
+
 module.exports = {
     sendHeosCommand,
     playTidalAlbum,
     queueTidalAlbum,
     getPlayers,
     pausePlayer,
-    resumePlayer
+    resumePlayer,
+    getPlayState
 };
