@@ -105,7 +105,7 @@ const queueTidalAlbum = async (tidalAlbumId, playerId = HEOS_PLAYER_ID) => {
 
     try {
         // Agregamos el álbum de TIDAL a la cola sin limpiarla
-        const addToQueueCommand = `browse/add_to_queue?pid=${playerId}&sid=10&cid=LIBALBUM-${tidalAlbumId}&aid=1`;
+        const addToQueueCommand = `browse/add_to_queue?pid=${playerId}&sid=10&cid=LIBALBUM-${tidalAlbumId}&aid=3`;
         const result = await sendHeosCommand(addToQueueCommand);
         
         logger.info(`[HEOS] Successfully queued TIDAL album ${tidalAlbumId}`);
