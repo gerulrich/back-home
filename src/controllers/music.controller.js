@@ -2,6 +2,9 @@ const { generateSecurePathHash } = require("../helpers/secure-url");
 const Album  = require("../models/album");
 const sockets = require("../websocket/user-sockets");
 const { spawn } = require('child_process');
+const logger = require("../helpers/logger");
+const mpd = require("../helpers/mpd-api");
+const denon = require("../helpers/denon-api");
 
 
 const getAlbums = async(req, res) => {
@@ -151,6 +154,55 @@ const updateTrackById = async(req, res) => {
     res.json(track);
 }
 
+const playAlbum = async(req, res) => {
+    const { id } = req.params;
+    logger.info(`[playAlbum] Request to play album with id: ${id}`);
+    
+    const album = await Album.findById(id);
+    if (!album) {
+        logger.warn(`[playAlbum] Album ${id} not found`);
+        return res.status(404).json({msg: `Album ${id} not found`});
+    }
+    
+    logger.info(`[playAlbum] Playing album "${album.title}" by "${album.artist}" via MPD`);
+    
+    try {
+        // Verificar y encender el amplificador Denon antes de reproducir
+        logger.info(`[playAlbum] Ensuring Denon amplifier is ready...`);
+        const denonStatus = await denon.ensurePowerOnAndSource();
+        logger.info(`[playAlbum] Denon status: ${JSON.stringify(denonStatus)}`);
+        
+        // Si el amplificador fue encendido, esperar para que esté listo
+        if (!denonStatus.wasPoweredOn) {
+            const warmupDelay = parseInt(process.env.DENON_WARMUP_DELAY || '5000');
+            logger.info(`[playAlbum] Amplifier was powered on, waiting ${warmupDelay}ms for warmup...`);
+            await new Promise(resolve => setTimeout(resolve, warmupDelay));
+            logger.info(`[playAlbum] Warmup complete, proceeding with playback`);
+        }
+        
+        await mpd.playLocalAlbum(album.artist, album.title);
+        return res.json({ 
+            action: 'play',
+            album: {
+                id: album._id,
+                title: album.title,
+                artist: album.artist,
+                cover_url: album.cover_url
+            },
+            playback: 'mpd',
+            status: 'success',
+            denonStatus,
+            message: `Playing ${album.title} via MPD` 
+        });
+    } catch (error) {
+        logger.error(`[playAlbum] Error playing via MPD: ${error.message}`);
+        return res.status(500).json({
+            msg: 'Error playing via MPD',
+            error: error.message
+        });
+    }
+}
+
 const downloadProgress = async(req, res) => {
     const { uid, album, message, level, date, progress } = req.body;
     const socket = sockets.sockets[uid];
@@ -196,6 +248,7 @@ module.exports = {
     getTrackById,
     getSpectrumpicTrackById,
     updateTrackById,
+    playAlbum,
     downloadProgress,
     getAlbumStats
 }

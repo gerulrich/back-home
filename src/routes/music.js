@@ -11,6 +11,7 @@ const {
     getTracksByAlbumId,
     getTrackById,
     updateTrackById, 
+    playAlbum,
     downloadProgress,
     getSpectrumpicTrackById,
     getAlbumStats,
@@ -105,6 +106,13 @@ router.get('/albums/:id/tracks/:trackId/spectrumpic', [
     check('id', 'An invalid album id was supplied').isMongoId(),
     requestValidator
 ], getSpectrumpicTrackById);
+
+router.post('/albums/:id/play', [
+    validateJWT,
+    rolesAllowed('USER_ROLE', 'ADMIN_ROLE'),
+    check('id', 'An invalid album id was supplied').isMongoId(),
+    requestValidator
+], playAlbum);
 
 router.get('/stats', [
     validateJWT,
