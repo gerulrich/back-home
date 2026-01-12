@@ -7,11 +7,6 @@ const DENON_HOST = process.env.DENON_HOST || '10.10.10.233';
 const DENON_TELNET_PORT = process.env.DENON_TELNET_PORT || 23;
 const DENON_SOURCE = process.env.DENON_SOURCE || 'NET';
 
-// Crear un agente HTTPS que ignore certificados auto-firmados
-const httpsAgent = new https.Agent({
-    rejectUnauthorized: false
-});
-
 /**
  * Envía un comando al amplificador Denon mediante telnet (puerto 23)
  * @param {string} command - Comando a enviar (ej: 'PW?', 'PWON', 'SINET')
