@@ -33,7 +33,7 @@ router.put('/:id', [
     check('type', '\'type\' is a required field.').notEmpty(),
     check('type', '\'type\' must be either QR or RFID').isIn(['QR', 'RFID']),
     check('source', '\'source\' is a required field.').notEmpty(),
-    check('source', '\'source\' must be either local or heos').isIn(['local', 'heos']),
+    check('source', '\'source\' must be either local or heos').isIn(['local', 'heos', 'ma']),
     check('album', '\'album\' is a required field.').notEmpty(),
     check('album', 'An invalid album id was supplied').isMongoId(),
     rolesAllowed('ADMIN_ROLE'),
