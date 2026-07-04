@@ -23,7 +23,7 @@ const getMusicTags = async(req, res) => {
 
 const getMusicTagById = async(req, res) => {
     const { id } = req.params;
-    const tag = await MusicTag.findById(id).populate('album', 'artist title cover_url');
+    const tag = await MusicTag.findById(id).populate('album', 'artist title cover_url source source_id');
     if (!tag) {
         return res.status(404).json({msg: `MusicTag ${id} not found`});
     }
