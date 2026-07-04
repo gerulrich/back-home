@@ -17,7 +17,7 @@ const MusicTagSchema = Schema({
     },
     source: {
         type: String,
-        enum: ['local', 'heos'],
+        enum: ['local', 'heos', 'ma'],
         required: [true, '\'source\' is a required field.']
     },
     album: {
